@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.o
+.env
+.venv
+venv/
+env/
+*.pth
+FashionMNIST/
+*.log
+*.pdf
