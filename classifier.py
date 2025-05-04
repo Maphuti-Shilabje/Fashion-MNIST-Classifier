@@ -100,8 +100,8 @@ num_classes = 10    # Number of classes (10 for Fashion MNIST)
 
 model = fashionANN(input_size = input_size , hidden_size = hidden_size, output_size = num_classes).to(DEVICE)
 
-print("Model initialized.")
-print(model)
+#print("Model initialized.")
+#print(model)    # Print the model architecture
 
 # Loss function and optimizer
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
@@ -126,9 +126,29 @@ for epoch in range(EPOCHS):
     
     epoch_loss = running_loss / len(train_loader)
 
-    print(f"Epoch [{epoch+1}/{EPOCHS}], Average Training Loss: {epoch_loss:.4f}")
+    print(f"Epoch [{epoch+1}/{EPOCHS}], Average Training Loss: {epoch_loss:.4f}") # Print the average loss for the epoch
 
-print("Training complete.")
+# evaluate the model
+print("Evaluating the model...")
+
+model.eval()  # Set the model to evaluation mode
+correct = 0
+total = 0
+
+with torch.no_grad():  # Disable gradient calculation for evaluation
+    for images, labels in test_loader:
+        images = images.to(DEVICE)  # Move images to the device
+        labels = labels.to(DEVICE)  # Move labels to the device
+
+        outputs = model(images)      # Forward pass
+        _, predicted = torch.max(outputs.data, 1)  # Get the predicted class
+        total += labels.size(0)     # Total number of samples
+        correct += (predicted == labels).sum().item()  # Count correct predictions
+
+accuracy = 100 * correct / total  # Calculate accuracy
+print(f"Accuracy of the model on the test set: {accuracy:.2f}%")  # Print accuracy
+
+
 
 
 
