@@ -10,6 +10,8 @@ import numpy as np
 
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader 
+from PIL import Image
+from torchvision import io
 
 
 # Constants and Hyperparameters
@@ -161,6 +163,27 @@ loaded_model.eval() # Set it to evaluation mode immediately after loading
 print(f"Model loaded from {MODEL_PATH}")
 
 
+# Test the loaded model on a single image
+def test_single_image(image_path):
+    # Load the image
+    image = Image.open(image_path).convert("L")  # Convert to grayscale
+    image = transform(image)  # Apply the same transformations as during training
+    image = image.unsqueeze(0).float()  # Add batch dimension and convert to float
+
+    # Move the image to the device
+    image = image.to(DEVICE)
+
+    # Forward pass through the loaded model
+    with torch.no_grad():
+        output = loaded_model(image)
+        _, predicted = torch.max(output.data, 1)  # Get the predicted class
+
+    return CLASS_NAMES[predicted.item()]  # Return the class name
+
+# Test the loaded model on a single image
+image_path = "fashion-jpegs/bag.jpg"  
+predicted_class = test_single_image(image_path)  # Call the function to test the image
+print(f"Predicted class for the image: {predicted_class}")  # Print the predicted class
 
 
 print("End.")
