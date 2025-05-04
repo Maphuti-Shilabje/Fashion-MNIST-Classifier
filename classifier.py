@@ -148,7 +148,9 @@ with torch.no_grad():  # Disable gradient calculation for evaluation
 accuracy = 100 * correct / total  # Calculate accuracy
 print(f"Accuracy of the model on the test set: {accuracy:.2f}%")  # Print accuracy
 
-
+# saving the model
+torch.save(model.state_dict(), MODEL_PATH)  # Save the model state dictionary
+print(f"Model saved to {MODEL_PATH}")  # Print confirmation of model saving
 
 
 
