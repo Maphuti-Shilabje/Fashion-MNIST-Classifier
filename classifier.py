@@ -152,6 +152,14 @@ print(f"Accuracy of the model on the test set: {accuracy:.2f}%")  # Print accura
 torch.save(model.state_dict(), MODEL_PATH)  # Save the model state dictionary
 print(f"Model saved to {MODEL_PATH}")  # Print confirmation of model saving
 
+# loading the model
+loaded_model = fashionANN(input_size=input_size, hidden_size=hidden_size, output_size=num_classes)  # Initialize a new model instance
+# Then load the saved weights and biases (the state dictionary)
+loaded_model.load_state_dict(torch.load(MODEL_PATH))
+loaded_model.to(DEVICE) # Move the loaded model to the correct device
+loaded_model.eval() # Set it to evaluation mode immediately after loading
+print(f"Model loaded from {MODEL_PATH}")
+
 
 
 
