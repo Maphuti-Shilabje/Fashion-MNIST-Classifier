@@ -105,51 +105,66 @@ model = fashionANN(input_size = input_size , hidden_size = hidden_size, output_s
 #print("Model initialized.")
 #print(model)    # Print the model architecture
 
-# Loss function and optimizer
-optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-criterion = nn.CrossEntropyLoss()       # Loss function for multi-class classification
+def train_model(model, train_loader, criterion, optimizer, num_epochs, device):
 
-# Training loop
-for epoch in range(EPOCHS):
-    model.train()    # Set the model to training mode
-    running_loss = 0.0
-    for i, (images, labels) in enumerate(train_loader):
+    print("Training the model...")
+    log_file = open("log.txt", "w")  # Open a log file to save training details
+    log_file.write("Epoch, Average Training Loss\n")  # Write header to the log file
 
-        images = images.to(DEVICE)   # Move images to the device (GPU or CPU)
-        labels = labels.to(DEVICE)   # Move labels to the device
+    model.train()  # Set the model to training mode
+    # Training loop
+    for epoch in range(EPOCHS):
+        model.train()    # Set the model to training mode
+        running_loss = 0.0
+        for i, (images, labels) in enumerate(train_loader):
 
-        optimizer.zero_grad()        # Zero the gradients
-        outputs = model(images)      # Forward pass
-        loss = criterion(outputs, labels)  # Compute the loss
-        loss.backward()             # Backward pass
-        optimizer.step()            # Update the weights
-        running_loss += loss.item()  # Accumulate the loss
-    
-    epoch_loss = running_loss / len(train_loader)
+            images = images.to(DEVICE)   # Move images to the device (GPU or CPU)
+            labels = labels.to(DEVICE)   # Move labels to the device
 
-    print(f"Epoch [{epoch+1}/{EPOCHS}], Average Training Loss: {epoch_loss:.4f}") # Print the average loss for the epoch
+            optimizer.zero_grad()        # Zero the gradients
+            outputs = model(images)      # Forward pass
+            loss = criterion(outputs, labels)  # Compute the loss
+            loss.backward()             # Backward pass
+            optimizer.step()            # Update the weights
+            running_loss += loss.item()  # Accumulate the loss
+        
+        epoch_loss = running_loss / len(train_loader)  # Average loss for the epoch
+        print(f"Epoch [{epoch+1}/{EPOCHS}], Average Training Loss: {epoch_loss:.4f}") # Print the average loss for the epoch
+        log_file.write(f"{epoch+1}, {epoch_loss:.4f}\n")  # Write epoch and loss to the log file
+
+    print("Training completed.")  # Print confirmation of training completion
+    log_file.close()  # Close the log file
+    print("Log file saved as log.txt")  # Print confirmation of log file saving
 
 # evaluate the model
-print("Evaluating the model...")
+def evaluate_model(model, test_loader, device):
+    print("Evaluating the model...")
 
-model.eval()  # Set the model to evaluation mode
-correct = 0
-total = 0
+    model.eval()  # Set the model to evaluation mode
+    correct = 0
+    total = 0
 
-with torch.no_grad():  # Disable gradient calculation for evaluation
-    for images, labels in test_loader:
-        images = images.to(DEVICE)  # Move images to the device
-        labels = labels.to(DEVICE)  # Move labels to the device
+    with torch.no_grad():  # Disable gradient calculation for evaluation
+        for images, labels in test_loader:
+            images = images.to(DEVICE)  # Move images to the device
+            labels = labels.to(DEVICE)  # Move labels to the device
 
-        outputs = model(images)      # Forward pass
-        _, predicted = torch.max(outputs.data, 1)  # Get the predicted class
-        total += labels.size(0)     # Total number of samples
-        correct += (predicted == labels).sum().item()  # Count correct predictions
+            outputs = model(images)      # Forward pass
+            _, predicted = torch.max(outputs.data, 1)  # Get the predicted class
+            total += labels.size(0)     # Total number of samples
+            correct += (predicted == labels).sum().item()  # Count correct predictions
 
-accuracy = 100 * correct / total  # Calculate accuracy
-print(f"Accuracy of the model on the test set: {accuracy:.2f}%")  # Print accuracy
+    accuracy = 100 * correct / total  # Calculate accuracy
+    print(f"Accuracy of the model on the test set: {accuracy:.2f}%")  # Print accuracy
 
+    # append accuracy to the log file
+    with open("log.txt", "a") as log_file:
+        log_file.write(f"Accuracy: {accuracy:.2f}%\n")
+
+    return accuracy  # Return accuracy
+
+"""
 # saving the model
 torch.save(model.state_dict(), MODEL_PATH)  # Save the model state dictionary
 print(f"Model saved to {MODEL_PATH}")  # Print confirmation of model saving
@@ -161,7 +176,7 @@ loaded_model.load_state_dict(torch.load(MODEL_PATH))
 loaded_model.to(DEVICE) # Move the loaded model to the correct device
 loaded_model.eval() # Set it to evaluation mode immediately after loading
 print(f"Model loaded from {MODEL_PATH}")
-
+"""
 
 def predict_image(image_path, model, transform, device, class_names):
 
@@ -174,7 +189,7 @@ def predict_image(image_path, model, transform, device, class_names):
         print(f"Error loading image {image_path}: {e}")
         return None
 
-    img_tensor = transform(img)
+    img_tensor = transform(img) # Apply the same transformations as during training
     img_batch = img_tensor.unsqueeze(0).to(device)
 
     model.eval()    # Set the model to evaluation mode
@@ -185,6 +200,8 @@ def predict_image(image_path, model, transform, device, class_names):
         predicted_index = torch.argmax(probabilities, dim=1).item() # Get the index of the predicted class
 
     return class_names[predicted_index] # Return the predicted class name
+
+
 
 
 
