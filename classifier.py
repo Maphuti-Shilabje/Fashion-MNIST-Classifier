@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 DATA_DIR = "."          # Directory where the dataset is stored
 MODEL_PATH = "fashion_mnist_ann.pth"   
 BATCH_SIZE = 64                         
-EPOCHS = 15
+EPOCHS = 5
 LEARNING_RATE = 0.001
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 CLASS_NAMES = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat','Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
@@ -102,5 +102,35 @@ model = fashionANN(input_size = input_size , hidden_size = hidden_size, output_s
 
 print("Model initialized.")
 print(model)
+
+# Loss function and optimizer
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+criterion = nn.CrossEntropyLoss()       # Loss function for multi-class classification
+
+# Training loop
+for epoch in range(EPOCHS):
+    model.train()    # Set the model to training mode
+    running_loss = 0.0
+    for i, (images, labels) in enumerate(train_loader):
+
+        images = images.to(DEVICE)   # Move images to the device (GPU or CPU)
+        labels = labels.to(DEVICE)   # Move labels to the device
+
+        optimizer.zero_grad()        # Zero the gradients
+        outputs = model(images)      # Forward pass
+        loss = criterion(outputs, labels)  # Compute the loss
+        loss.backward()             # Backward pass
+        optimizer.step()            # Update the weights
+        running_loss += loss.item()  # Accumulate the loss
+    
+    epoch_loss = running_loss / len(train_loader)
+
+    print(f"Epoch [{epoch+1}/{EPOCHS}], Average Training Loss: {epoch_loss:.4f}")
+
+print("Training complete.")
+
+
+
 
 print("End.")
