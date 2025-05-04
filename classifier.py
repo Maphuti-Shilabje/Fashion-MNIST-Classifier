@@ -163,27 +163,29 @@ loaded_model.eval() # Set it to evaluation mode immediately after loading
 print(f"Model loaded from {MODEL_PATH}")
 
 
-# Test the loaded model on a single image
-def test_single_image(image_path):
-    # Load the image
-    image = Image.open(image_path).convert("L")  # Convert to grayscale
-    image = transform(image)  # Apply the same transformations as during training
-    image = image.unsqueeze(0).float()  # Add batch dimension and convert to float
+def predict_image(image_path, model, transform, device, class_names):
 
-    # Move the image to the device
-    image = image.to(DEVICE)
+    try:
+        img = Image.open(image_path).convert('L') # Convert to grayscale
+    except FileNotFoundError:
+        print(f"Error: File not found at {image_path}")
+        return None
+    except Exception as e:
+        print(f"Error loading image {image_path}: {e}")
+        return None
 
-    # Forward pass through the loaded model
+    img_tensor = transform(img)
+    img_batch = img_tensor.unsqueeze(0).to(device)
+
+    model.eval()    # Set the model to evaluation mode
+    # Perform inference
     with torch.no_grad():
-        output = loaded_model(image)
-        _, predicted = torch.max(output.data, 1)  # Get the predicted class
+        output = model(img_batch)   # Forward pass
+        probabilities = F.softmax(output, dim=1)  # Convert logits to probabilities
+        predicted_index = torch.argmax(probabilities, dim=1).item() # Get the index of the predicted class
 
-    return CLASS_NAMES[predicted.item()]  # Return the class name
+    return class_names[predicted_index] # Return the predicted class name
 
-# Test the loaded model on a single image
-image_path = "fashion-jpegs/bag.jpg"  
-predicted_class = test_single_image(image_path)  # Call the function to test the image
-print(f"Predicted class for the image: {predicted_class}")  # Print the predicted class
 
 
 print("End.")
