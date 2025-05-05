@@ -19,7 +19,7 @@ import torch.nn.functional as F
 DATA_DIR = "."          # Directory where the dataset is stored
 MODEL_PATH = "fashion_mnist_ann.pth"   
 BATCH_SIZE = 64                         
-EPOCHS = 5
+EPOCHS = 15
 LEARNING_RATE = 0.001
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 CLASS_NAMES = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat','Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
