@@ -12,6 +12,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader 
 from PIL import Image
 from torchvision import io
+import torch.nn.functional as F
 
 
 # Constants and Hyperparameters
@@ -110,7 +111,7 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, device):
 
     print("Training the model...")
     log_file = open("log.txt", "w")  # Open a log file to save training details
-    log_file.write("Epoch, Average Training Loss\n")  # Write header to the log file
+    # log_file.write("Epoch, Average Training Loss\n")  # Write header to the log file
 
     model.train()  # Set the model to training mode
     # Training loop
@@ -131,7 +132,7 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, device):
         
         epoch_loss = running_loss / len(train_loader)  # Average loss for the epoch
         print(f"Epoch [{epoch+1}/{EPOCHS}], Average Training Loss: {epoch_loss:.4f}") # Print the average loss for the epoch
-        log_file.write(f"{epoch+1}, {epoch_loss:.4f}\n")  # Write epoch and loss to the log file
+        log_file.write(f"Epoch {epoch+1},  Average Training Loss: {epoch_loss:.4f}\n")  # Write epoch and loss to the log file
 
     print("Training completed.")  # Print confirmation of training completion
     log_file.close()  # Close the log file
@@ -160,7 +161,7 @@ def evaluate_model(model, test_loader, device):
 
     # append accuracy to the log file
     with open("log.txt", "a") as log_file:
-        log_file.write(f"Accuracy: {accuracy:.2f}%\n")
+        log_file.write(f"Test Accuracy: {accuracy:.2f}%\n")
 
     return accuracy  # Return accuracy
 
@@ -201,6 +202,40 @@ def predict_image(image_path, model, transform, device, class_names):
 
     return class_names[predicted_index] # Return the predicted class name
 
+if __name__ == "__main__":
+    model = fashionANN().to(DEVICE)  # Initialize the model
+
+    if os.path.exists(MODEL_PATH): # Check if the model file exists
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))  # Load the model state dictionary
+    else:
+        print("No pre-trained model found. Training a new model...")
+        # Train the model if no pre-trained model is found
+        train_dataset = datasets.FashionMNIST(root=DATA_DIR, train=True, download=True, transform=transform)
+        test_dataset = datasets.FashionMNIST(root=DATA_DIR, train=False, download=True, transform=transform)
+        train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+        #train
+        train_model(model, train_loader, criterion, optimizer, EPOCHS, DEVICE)
+
+        # evaluate
+        evaluate_model(model, test_loader, DEVICE)
+
+        # Save the trained model
+        torch.save(model.state_dict(), MODEL_PATH)
+        print(f"Model saved to {MODEL_PATH}")
+
+    print("\n--- Interactive Classifier ---")
+    while True:
+        image_path = input("Enter the path to the image (or 'exit' to quit): ")
+        if image_path.lower() == 'exit':
+            break
+        predicted_class = predict_image(image_path, model, transform, DEVICE, CLASS_NAMES)
+        if predicted_class is not None:
+            print(f"Predicted class: {predicted_class}")
 
 
 

@@ -1,0 +1,6 @@
+Epoch 1,  Average Training Loss: 0.5448
+Epoch 2,  Average Training Loss: 0.4559
+Epoch 3,  Average Training Loss: 0.4318
+Epoch 4,  Average Training Loss: 0.4305
+Epoch 5,  Average Training Loss: 0.4160
+Test Accuracy: 82.35%
