@@ -1,4 +1,4 @@
 *.pdf
- __pycache__/
- *.png
- *.jpg
+__pycache__/
+*.png
+*.jpg
