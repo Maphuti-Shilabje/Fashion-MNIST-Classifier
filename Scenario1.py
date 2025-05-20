@@ -26,9 +26,9 @@ STEPS_PER_EPOCH = 250
 # Epsilon-greedy exploration
 INITIAL_EPSILON = 0.9 
 MIN_EPSILON = 0.1
-EPSILON_DECAY_VALUE = 0.999 
+EPSILON_DECAY_VALUE = (MIN_EPSILON / INITIAL_EPSILON) ** (1.0 / (NUM_EPOCHS* 0.8)) # Decay rate for epsilon
 
-q_table = np.zeros((GRID_ROWS, GRID_COLS, NUM_ACTIONS)) # Initialize Q-table
+q_table = np.zeros((GRID_ROWS, GRID_COLS, NUM_ACTIONS, 2, NUM_ACTIONS)) # Initialize Q-table
 
 def get_state_index(pos, packages_remaining):
     """
@@ -43,7 +43,6 @@ def get_state_index(pos, packages_remaining):
     y = np.clip(y, 0, GRID_COLS - 1) # Ensure y is within bounds
 
     packages = packages_remaining 
-
 
     return (pos[0], pos[1], packages)
 
@@ -61,6 +60,29 @@ def choose_action(state, current_epoch):
         # for the current state
         return np.argmax(q_table[state])
 
+def get_reward(prev_package_count, curr_package_count, is_terminal_state):
+    """
+    Calculates the reward for the agent's last action.
+    - prev_package_count: Number of packages before the action.
+    - curr_package_count: Number of packages after the action.
+    - is_terminal_state: Boolean indicating if the new state is terminal.
+    """
+    reward = 0
+    # Penalty for each step to encourage efficiency
+    reward -= 1 
+
+    if curr_package_count < prev_package_count:
+        # Agent picked up a package
+        reward += 100  # Large positive reward for picking up the package
+    
+    if is_terminal_state:
+        if curr_package_count == 0:
+            reward += 200 # Large positive reward for reaching the terminal state with all packages collected
+        else:
+            reward -= 50 # Penalty if terminal for other reasons (e.g. error)
+            
+    return reward
+
 
 def train_agent():
 
@@ -69,20 +91,23 @@ def train_agent():
 
     current_epsilon = INITIAL_EPSILON
 
+    epoch_rewards = []
+    epoch_steps = []
+
     print(f"Q-table shape: {q_table.shape}")
     print(f"Training agent with {NUM_EPOCHS} epochs and {STEPS_PER_EPOCH} steps per epoch...")
 
     for epoch in range(NUM_EPOCHS):
         fourRoomsObj.newEpoch()  # Reset environment to a new random start state
 
-    # Loop through the steps in the epoch
-    if current_epsilon > MIN_EPSILON:
-        current_epsilon *= EPSILON_DECAY_VALUE
-        current_epsilon = max(MIN_EPSILON, current_epsilon) # Ensure it doesn't go below min
+        # Loop through the steps in the epoch
+        if current_epsilon > MIN_EPSILON:
+            current_epsilon *= EPSILON_DECAY_VALUE
+            current_epsilon = max(MIN_EPSILON, current_epsilon) # Ensure it doesn't go below min
 
-    if (epoch + 1) % 100 == 0: # Log progress for every 100 epochs
-        print(f"Epoch {epoch + 1}/{NUM_EPOCHS} completed. Epsilon: {current_epsilon:.4f}")
-       
+        if (epoch + 1) % 100 == 0: # Log progress for every 100 epochs
+            print(f"Epoch {epoch + 1}/{NUM_EPOCHS} completed. Epsilon: {current_epsilon:.4f}")
+        
 
     print("Training complete.")
     print("displaying path from last epoch")
