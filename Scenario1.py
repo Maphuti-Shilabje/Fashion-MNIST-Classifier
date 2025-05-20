@@ -6,6 +6,7 @@
 
 from FourRooms import FourRooms
 import numpy as np
+import random
 
 GRID_COLS = 11
 GRID_ROWS = 11
@@ -21,6 +22,11 @@ DISCOUNT_FACTOR = 0.9
 NUM_EPOCHS = 1000
 STEPS_PER_EPOCH = 250
 
+# The exploration parameters
+# Epsilon-greedy exploration
+INITIAL_EPSILON = 0.9 
+MIN_EPSILON = 0.1
+EPSILON_DECAY_VALUE = 0.999 
 
 q_table = np.zeros((GRID_ROWS, GRID_COLS, NUM_ACTIONS)) # Initialize Q-table
 
@@ -40,3 +46,48 @@ def get_state_index(pos, packages_remaining):
 
 
     return (pos[0], pos[1], packages)
+
+
+def choose_action(state, current_epoch):
+    """
+    Selects an action using an epsilon-greedy policy.
+    With probability epsilon, a random action is chosen (exploration).
+    """
+    if random.random() < current_epoch:
+        # Explore: choose a random action index
+        return random.randrange(NUM_ACTIONS)
+    else:
+        # Exploit: choose the action with the highest Q-value
+        # for the current state
+        return np.argmax(q_table[state])
+
+
+def train_agent():
+
+    print("Training agent...")
+    fourRoomsObj = FourRooms('simple') # Create FourRooms Object
+
+    current_epsilon = INITIAL_EPSILON
+
+    print(f"Q-table shape: {q_table.shape}")
+    print(f"Training agent with {NUM_EPOCHS} epochs and {STEPS_PER_EPOCH} steps per epoch...")
+
+    for epoch in range(NUM_EPOCHS):
+        fourRoomsObj.newEpoch()  # Reset environment to a new random start state
+
+    # Loop through the steps in the epoch
+    if current_epsilon > MIN_EPSILON:
+        current_epsilon *= EPSILON_DECAY_VALUE
+        current_epsilon = max(MIN_EPSILON, current_epsilon) # Ensure it doesn't go below min
+
+    if (epoch + 1) % 100 == 0: # Log progress for every 100 epochs
+        print(f"Epoch {epoch + 1}/{NUM_EPOCHS} completed. Epsilon: {current_epsilon:.4f}")
+       
+
+    print("Training complete.")
+
+
+if __name__ == "__main__":
+    train_agent()
+    # fourRoomsObj = FourRooms('simple')
+    # fourRoomsObj.showPath(-1)
