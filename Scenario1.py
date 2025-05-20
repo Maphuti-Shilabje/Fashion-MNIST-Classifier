@@ -60,7 +60,7 @@ def choose_action(state, current_epoch):
         # for the current state
         return np.argmax(q_table[state])
 
-def get_reward(prev_package_count, curr_package_count, is_terminal_state):
+def get_reward(prev_package_count, curr_package_count, is_terminal_state, grid_cell_type):
     """
     Calculates the reward for the agent's last action.
     - prev_package_count: Number of packages before the action.
@@ -100,14 +100,70 @@ def train_agent():
     for epoch in range(NUM_EPOCHS):
         fourRoomsObj.newEpoch()  # Reset environment to a new random start state
 
+        is_terminal = False
+        steps_this_epoch = 0
+        total_reward_this_epoch = 0
+
+        current_pos = fourRoomsObj.getPosition()
+        current_packages_left_val = fourRoomsObj.getPackagesRemaining()
+        current_state_idx = get_state_index(current_pos, current_packages_left_val)
+
+        while not is_terminal and steps_this_epoch < STEPS_PER_EPOCH:
+            # 1. Choose action
+            action_idx = choose_action(current_state_idx, current_epsilon)
+            action_to_take = ACTIONS[action_idx] 
+            
+            old_packages_left_val = current_state_idx[2] # Packages before action, from current Q-state index
+
+            # 2. Take action in environment
+            # takeAction returns: (gridCellType, newPos, packagescount, isTerminal)
+            grid_cell_type, new_pos, new_packages_left_val, terminal_from_env = fourRoomsObj.takeAction(action_to_take)
+            
+            # 3. Calculate Reward
+            reward = get_reward(old_packages_left_val, new_packages_left_val, terminal_from_env, grid_cell_type)
+            total_reward_this_epoch += reward
+
+            # 4. Observe new state
+            next_state_idx = get_state_index(new_pos, new_packages_left_val)
+
+            # 5. Update Q-Table (Q-learning formula)
+            old_q_value = q_table[current_state_idx + (action_idx,)] # Q(s,a)
+            
+            # Best Q-value for the next state: Q_max(s',a')
+            # If the next state is terminal, there are no future actions, so next_max_q is 0.
+            if terminal_from_env:
+                next_max_q = 0.0
+            else:
+                next_max_q = np.max(q_table[next_state_idx])
+            
+            # Q-update rule: Q(s,a) <- Q(s,a) + alpha * (R + gamma * max_a' Q(s',a') - Q(s,a))
+            new_q_value = old_q_value + LEARNING_RATE * (reward + DISCOUNT_FACTOR * next_max_q - old_q_value)
+            q_table[current_state_idx + (action_idx,)] = new_q_value # Update Q-table
+            
+            # 6. Update current state and step count
+            current_state_idx = next_state_idx
+            is_terminal = terminal_from_env
+            steps_this_epoch += 1
+        
+        epoch_rewards.append(total_reward_this_epoch)
+        epoch_steps.append(steps_this_epoch)
+
+        
+
         # Loop through the steps in the epoch
         if current_epsilon > MIN_EPSILON:
             current_epsilon *= EPSILON_DECAY_VALUE
             current_epsilon = max(MIN_EPSILON, current_epsilon) # Ensure it doesn't go below min
 
         if (epoch + 1) % 100 == 0: # Log progress for every 100 epochs
-            print(f"Epoch {epoch + 1}/{NUM_EPOCHS} completed. Epsilon: {current_epsilon:.4f}")
+            avg_reward_last_100 = np.mean(epoch_rewards[-100:])
+            avg_steps_last_100 = np.mean(epoch_steps[-100:])
+            print(f"Epoch {epoch + 1}/{NUM_EPOCHS} | Steps: {steps_this_epoch} | Epsilon: {current_epsilon:.4f} | Last Reward: {total_reward_this_epoch} | Avg Reward (100): {avg_reward_last_100:.2f} | Avg Steps (100): {avg_steps_last_100:.2f}")
         
+            if is_terminal and new_packages_left_val == 0:
+                 print(f"  SUCCESS: Package collected in {steps_this_epoch} steps.")
+            elif steps_this_epoch >= STEPS_PER_EPOCH:
+                 print(f"  TIMEOUT: Reached max steps.")
 
     print("Training complete.")
     print("displaying path from last epoch")
