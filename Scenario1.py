@@ -85,9 +85,11 @@ def train_agent():
        
 
     print("Training complete.")
+    print("displaying path from last epoch")
+
+    fourRoomsObj.showPath(-1,"scenario1_final_path.png")  # Show the path taken in the last epoch
+    print("Path image saved to scenario1_final_path_placeholder.png")
 
 
 if __name__ == "__main__":
     train_agent()
-    # fourRoomsObj = FourRooms('simple')
-    # fourRoomsObj.showPath(-1)
