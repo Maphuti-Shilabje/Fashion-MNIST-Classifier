@@ -21,12 +21,21 @@ DISCOUNT_FACTOR = 0.9
 NUM_EPOCHS = 2000  # Increased for potentially better convergence
 STEPS_PER_EPOCH = 250
 
+EXPLORATION_STRATEGY = 'linear' # or 'linear'
+
 # The exploration parameters
 # Epsilon-greedy exploration
 INITIAL_EPSILON = 1.0 # Start with full exploration
 MIN_EPSILON = 0.01    # Minimum exploration rate
 # Adjusted decay to aim for MIN_EPSILON over ~80% of epochs
-EPSILON_DECAY_VALUE = (MIN_EPSILON / INITIAL_EPSILON) ** (1.0 / (NUM_EPOCHS * 0.8))
+
+if EXPLORATION_STRATEGY == 'multiplicative':
+    EPSILON_DECAY_VALUE = (MIN_EPSILON / INITIAL_EPSILON) ** (1.0 / (NUM_EPOCHS * 0.8))
+elif EXPLORATION_STRATEGY == 'linear':
+    EPSILON_DECAY_STEPS = NUM_EPOCHS * 0.8
+    EPSILON_DECREMENT = (INITIAL_EPSILON - MIN_EPSILON) / (NUM_EPOCHS * 0.8)
+else:
+    raise ValueError("Invalid exploration strategy. Choose 'multiplicative' or 'linear'.")
 
 # Initialize Q-table
 # State: (x_idx, y_idx, package_remaining_idx)
@@ -85,7 +94,7 @@ def get_reward(prev_package_count, curr_package_count, is_terminal_state, grid_c
     return reward
 
 def train_agent():
-    print("Training agent...")
+    print(f"Training agent with {EXPLORATION_STRATEGY} epsilon decay...")
     # If "from FourRooms import FourRooms" is used, then FourRooms() is correct.
     # Otherwise, it would be module_name.FourRooms()
     fourRoomsObj = FourRooms(scenario='simple') # Create FourRooms Object for 'simple' scenario
@@ -153,9 +162,16 @@ def train_agent():
         epoch_steps.append(steps_this_epoch)
         
         # Decay epsilon
-        if current_epsilon > MIN_EPSILON:
-            current_epsilon *= EPSILON_DECAY_VALUE
-            current_epsilon = max(MIN_EPSILON, current_epsilon) # Ensure it doesn't go below min
+        if EXPLORATION_STRATEGY == 'multiplicative':
+            # Multiplicative decay
+            if current_epsilon > MIN_EPSILON:
+                current_epsilon *= EPSILON_DECAY_VALUE
+                current_epsilon = max(MIN_EPSILON, current_epsilon) # Ensure it doesn't go below min
+        elif EXPLORATION_STRATEGY == 'linear':
+            if current_epsilon > MIN_EPSILON:
+                # current_epsilon = INITIAL_EPSILON - (epoch / EPSILON_DECAY_STEPS) * (INITIAL_EPSILON - MIN_EPSILON)
+                current_epsilon -= EPSILON_DECREMENT
+                current_epsilon = max(MIN_EPSILON, current_epsilon)
 
         if (epoch + 1) % 100 == 0: 
             avg_reward_last_100 = np.mean(epoch_rewards[-100:]) if len(epoch_rewards) >= 100 else np.mean(epoch_rewards)
@@ -174,6 +190,13 @@ def train_agent():
     fourRoomsObj.showPath(index=-1, savefig="scenario1_final_path.png")
     print("Path image saved to scenario1_final_path.png")
 
+    # --- Data Saving for Plotting (New) ---
+    # After the loop, save the results for later plotting
+    results_filename_suffix = f"_{EXPLORATION_STRATEGY}"
+    np.save(f"scenario1_epoch_rewards{results_filename_suffix}.npy", np.array(epoch_rewards))
+    np.save(f"scenario1_epoch_steps{results_filename_suffix}.npy", np.array(epoch_steps))
+    print(f"Saved epoch rewards to scenario1_epoch_rewards{results_filename_suffix}.npy")
+    print(f"Saved epoch steps to scenario1_epoch_steps{results_filename_suffix}.npy")
 
 if __name__ == "__main__":
     train_agent()
