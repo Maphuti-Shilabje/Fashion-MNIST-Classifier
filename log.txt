@@ -1,16 +1,16 @@
-Epoch 1,  Average Training Loss: 0.4964
-Epoch 2,  Average Training Loss: 0.3830
-Epoch 3,  Average Training Loss: 0.3442
-Epoch 4,  Average Training Loss: 0.3220
-Epoch 5,  Average Training Loss: 0.3024
-Epoch 6,  Average Training Loss: 0.2879
-Epoch 7,  Average Training Loss: 0.2742
-Epoch 8,  Average Training Loss: 0.2634
-Epoch 9,  Average Training Loss: 0.2494
-Epoch 10,  Average Training Loss: 0.2428
-Epoch 11,  Average Training Loss: 0.2367
-Epoch 12,  Average Training Loss: 0.2264
-Epoch 13,  Average Training Loss: 0.2233
-Epoch 14,  Average Training Loss: 0.2122
-Epoch 15,  Average Training Loss: 0.2074
-Test Accuracy: 88.48%
+Epoch 1,  Average Training Loss: 0.5010
+Epoch 2,  Average Training Loss: 0.3804
+Epoch 3,  Average Training Loss: 0.3423
+Epoch 4,  Average Training Loss: 0.3178
+Epoch 5,  Average Training Loss: 0.2987
+Epoch 6,  Average Training Loss: 0.2850
+Epoch 7,  Average Training Loss: 0.2717
+Epoch 8,  Average Training Loss: 0.2618
+Epoch 9,  Average Training Loss: 0.2483
+Epoch 10,  Average Training Loss: 0.2419
+Epoch 11,  Average Training Loss: 0.2336
+Epoch 12,  Average Training Loss: 0.2256
+Epoch 13,  Average Training Loss: 0.2163
+Epoch 14,  Average Training Loss: 0.2117
+Epoch 15,  Average Training Loss: 0.2031
+Test Accuracy: 88.68%
