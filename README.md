@@ -1,4 +1,4 @@
-# PyTorch ![alt text](image-1.png)
+# PyTorch Fashion MNIST Classifier
 
 A feedforward Artificial Neural Network (ANN) built in Python using PyTorch to classify clothing items from the FashionMNIST dataset. The project covers the end-to-end machine learning workflow, including data preprocessing, hyperparameter tuning, model training, and a final script for interactive classification of new images.
 
